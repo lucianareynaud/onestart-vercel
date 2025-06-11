@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript Viewer - Sales AI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <style>
+        :root {
+            --primary-color: #7158e2;
+            --primary-dark: #5e48b5;
+            --error-color: #e74c3c;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #eee;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .transcript-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .transcript-title {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .transcript-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .transcript-content {
+            padding: 1.5rem;
+            background-color: var(--light-gray);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+        
+        .metadata {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light-gray);
+            border-radius: 0.5rem;
+        }
+        
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .metadata-item i {
+            color: var(--primary-color);
+        }
+        
+        .metadata-label {
+            font-weight: 500;
+        }
+        
+        .button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .button-secondary {
+            background-color: var(--light-gray);
+            color: var(--text-color);
+        }
+        
+        .button-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .spinner {
+            width: 2.5rem;
+            height: 2.5rem;
+            border: 0.25rem solid rgba(113, 88, 226, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spinner 1s linear infinite;
+        }
+        
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .results-section {
+            display: none;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Estilos para a seção de enriquecimento de dados */
+        .enrichment-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .enrichment-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .linkedin-profiles-container {
+            margin-top: 1rem;
+        }
+        
+        .linkedin-profile-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            gap: 0.5rem;
+        }
+        
+        .linkedin-profile-item input {
+            flex-grow: 1;
+        }
+        
+        .remove-profile-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-profile-btn {
+            margin-top: 0.5rem;
+            background: var(--light-gray);
+            border: 1px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .add-profile-btn:hover {
+            background: #e8e8e8;
+        }
+        
+        .submit-enrichment-btn {
+            margin-top: 1rem;
+        }
+
+        /* Editable fields for analysis results */
+        .editable-field {
+            padding: 0.5rem;
+            border: 1px dashed transparent;
+            border-radius: 0.25rem;
+        }
+        
+        .editable-field:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(113, 88, 226, 0.05);
+            cursor: pointer;
+        }
+        
+        .editable-field.editing {
+            border-color: var(--primary-color);
+            background-color: white;
+        }
+        
+        .analysis-edit-buttons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        /* Structured Analysis Styles */
+        .structured-analysis {
+            margin-top: 1rem;
+        }
+        
+        .analysis-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .analysis-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .analysis-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .analysis-item strong {
+            color: #555;
+        }
+        
+        .analysis-item p {
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .two-columns {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .column {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .two-columns {
+                flex-direction: column;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .raw-json summary {
+            cursor: pointer;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 0.25rem;
+            display: inline-block;
+        }
+        
+        .raw-json summary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Pipeline progress indicator */
+        .pipeline-progress {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light-gray);
+            border-radius: 0.5rem;
+        }
+        
+        .pipeline-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 20%;
+            text-align: center;
+            position: relative;
+        }
+        
+        .pipeline-step:not(:last-child):after {
+            content: "";
+            position: absolute;
+            top: 1rem;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: 1;
+        }
+        
+        .step-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-icon i {
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .step-label {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .pipeline-step.active .step-icon {
+            background-color: var(--primary-color);
+        }
+        
+        .pipeline-step.completed .step-icon {
+            background-color: #27ae60;
+        }
+        
+        .pipeline-step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .pipeline-step.completed .step-label {
+            color: #27ae60;
+        }
+
+        .add-item-btn, .remove-item-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 4px 0;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .remove-item-btn {
+            background: var(--error-color);
+            margin-left: 5px;
+        }
+        
+        .array-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .array-item input {
+            flex-grow: 1;
+        }
+        
+        .editable-analysis label {
+            font-weight: 500;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Estilos adicionais para análise de chamada */
+        .talk-ratio-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .person {
+            width: 150px;
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            flex-grow: 1;
+            height: 20px;
+            background-color: #eee;
+            border-radius: 10px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        .percentage {
+            width: 50px;
+            text-align: right;
+        }
+        
+        .topics-table, .competitors-table, .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .topics-table th, .competitors-table th, .steps-table th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .topics-table td, .competitors-table td, .steps-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sentiment, .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .sentiment.positive {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .sentiment.negative {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .sentiment.neutral {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .status.completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.in-progress {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.pending {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .moment-item, .question-item, .coaching-item, .behavior-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        
+        .moment-item.pain {
+            border-left: 4px solid #f8d7da;
+        }
+        
+        .moment-item.opportunity {
+            border-left: 4px solid #d4edda;
+        }
+        
+        .moment-item.next-step {
+            border-left: 4px solid #fff3cd;
+        }
+        
+        .moment-time, .question-time {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .moment-type, .question-quality, .coaching-severity, .behavior-score {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .question-quality.high, .behavior-score.high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .question-quality.medium, .behavior-score.medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .question-quality.low, .behavior-score.low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .coaching-item.high {
+            border-left: 4px solid #f8d7da;
+        }
+        
+        .coaching-item.medium {
+            border-left: 4px solid #fff3cd;
+        }
+        
+        .coaching-item.low {
+            border-left: 4px solid #d4edda;
+        }
+        
+        .coaching-area {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .coaching-severity {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .coaching-severity.high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .coaching-severity.medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .coaching-severity.low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .behavior-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .analysis-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .analysis-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            user-select: none;
+        }
+        
+        .analysis-tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none !important;
+        }
+        
+        .tab-content.active {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="ri-file-text-line"></i> Transcript Viewer</h1>
+            <a href="/" class="button button-secondary">
+                <i class="ri-arrow-left-line"></i> Back to Home
+            </a>
+        </header>
+        
+        <div class="transcript-card">
+            <div class="transcript-header">
+                <h2 class="transcript-title">Transcript</h2>
+                <div class="transcript-actions">
+                    <button id="analyzeBtn" class="button">
+                        <i class="ri-ai-generate"></i> Analyze Sales Meeting
+                    </button>
+                    <button id="analyzeDirectBtn" class="button button-secondary" style="margin-right: 5px;">
+                        <i class="ri-chat-upload-line"></i> Analyze Pasted Text
+                    </button>
+                    <button id="copyBtn" class="button button-secondary">
+                        <i class="ri-file-copy-line"></i> Copy
+                    </button>
+                </div>
+            </div>
+            
+            <div class="metadata">
+                <div class="metadata-item">
+                    <i class="ri-time-line"></i>
+                    <span>Duration: <span class="metadata-value">{{ transcript.duration_seconds|default(0) }} seconds</span></span>
+                </div>
+                <div class="metadata-item">
+                    <i class="ri-global-line"></i>
+                    <span>Language: <span class="metadata-value">{{ transcript.language|default('pt') }}</span></span>
+                </div>
+                <div class="metadata-item">
+                    <i class="ri-calendar-line"></i>
+                    <span>Created: <span class="metadata-value">{{ transcript.created_at|default('') }}</span></span>
+                </div>
+            </div>
+            
+            <div class="transcript-content" id="transcriptText">{{ transcript.transcript }}</div>
+
+            <!-- Pipeline progress indicator -->
+            <div class="pipeline-progress" id="pipelineProgress" style="display:none;">
+                <h4>Analysis Progress</h4>
+                <div class="pipeline-steps">
+                    <div class="pipeline-step completed" id="stepTranscription">
+                        <div class="step-icon"><i class="ri-file-text-line"></i></div>
+                        <div class="step-label">Transcription</div>
+                    </div>
+                    <div class="pipeline-step" id="stepAnalysis">
+                        <div class="step-icon"><i class="ri-ai-generate"></i></div>
+                        <div class="step-label">Initial Analysis</div>
+                    </div>
+                    <div class="pipeline-step" id="stepWebsite">
+                        <div class="step-icon"><i class="ri-global-line"></i></div>
+                        <div class="step-label">Website Data</div>
+                    </div>
+                    <div class="pipeline-step" id="stepLinkedIn">
+                        <div class="step-icon"><i class="ri-linkedin-fill"></i></div>
+                        <div class="step-label">LinkedIn Data</div>
+                    </div>
+                    <div class="pipeline-step" id="stepReport">
+                        <div class="step-icon"><i class="ri-file-chart-line"></i></div>
+                        <div class="step-label">Final Report</div>
+                    </div>
+                </div>
+                <p class="pipeline-info" id="pipelineInfo">Status: Processing transcript...</p>
+            </div>
+            
+            <div class="loader" id="analysisLoader">
+                <div class="spinner"></div>
+                <p>Analyzing the transcript...</p>
+            </div>
+            
+            <div class="results-section" id="analysisResults">
+                <h3><i class="ri-ai-generate"></i> Analysis Results <small style="font-weight:normal;color:#666;">(editable)</small></h3>
+                <div id="analysisContent"></div>
+                <div class="analysis-edit-buttons" style="margin-top: 15px;">
+                    <button id="editAnalysisBtn" class="button button-secondary" style="display:none;">
+                        <i class="ri-edit-line"></i> Edit Analysis
+                    </button>
+                    <button id="saveAnalysisBtn" class="button" style="display:none;">
+                        <i class="ri-save-line"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Enriquecimento com scraping -->
+            <div class="enrichment-section" id="dataEnrichmentSection" style="display:none;">
+                <h3><i class="ri-database-2-line"></i> Enrich Analysis with External Data</h3>
+                <p>Add additional information from LinkedIn profiles and company website using BrightData scraping.</p>
+                
+                <form id="enrichmentForm">
+                    <div class="form-group">
+                        <label for="companyWebsite">Company Website:</label>
+                        <input type="url" id="companyWebsite" name="company_website" class="form-control" placeholder="https://www.company.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>LinkedIn Profiles of Key Stakeholders:</label>
+                        <div class="linkedin-profiles-container" id="linkedinProfilesContainer">
+                            <div class="linkedin-profile-item">
+                                <input type="url" name="linkedin_profiles[]" class="form-control linkedin-profile-url" placeholder="https://www.linkedin.com/in/key-person" required>
+                                <button type="button" class="remove-profile-btn"><i class="ri-close-line"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-profile-btn" id="addProfileBtn">
+                            <i class="ri-add-line"></i> Add another profile
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="button submit-enrichment-btn" id="submitEnrichmentBtn">
+                        <i class="ri-rocket-line"></i> Start Enrichment Process
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Loader for enrichment processing -->
+            <div class="loader" id="enrichmentLoader">
+                <div class="spinner"></div>
+                <p>Processing additional data...</p>
+            </div>
+            
+            <!-- Enrichment results -->
+            <div class="results-section" id="enrichmentResults">
+                <h3><i class="ri-file-info-line"></i> Sales Intelligence Report</h3>
+                <div id="enrichmentContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Copy transcript
+            $("#copyBtn").click(function() {
+                const transcriptText = $("#transcriptText").text();
+                navigator.clipboard.writeText(transcriptText).then(function() {
+                    alert("Transcript copied to clipboard!");
+                }, function() {
+                    alert("Failed to copy transcript. Please try manually selecting and copying the text.");
+                });
+            });
+            
+            // Global variable to store analysis data
+            let salesAnalysisData = {};
+            let callAnalysisData = null;
+            
+            // Make analysis results editable
+            let isEditingAnalysis = false;
+            
+            $("#editAnalysisBtn").click(function() {
+                isEditingAnalysis = true;
+                
+                // Create editable form from the current analysis data
+                createEditableAnalysisForm(salesAnalysisData);
+                
+                // Show save button, hide edit button
+                $("#saveAnalysisBtn").show();
+                $("#editAnalysisBtn").hide();
+            });
+            
+            // Function to create editable form from analysis data
+            function createEditableAnalysisForm(analysisData) {
+                let editableHtml = '<div class="editable-analysis">';
+                
+                // Create editable sections for each main property
+                for (const [key, value] of Object.entries(analysisData)) {
+                    if (Array.isArray(value)) {
+                        editableHtml += `<div class="form-group">
+                            <label>${key}:</label>
+                            <div class="array-items" data-field="${key}">`;
+                        
+                        value.forEach((item, index) => {
+                            const itemValue = typeof item === 'string' ? item : JSON.stringify(item);
+                            editableHtml += `<div class="array-item">
+                                <input type="text" class="form-control" data-index="${index}" value="${itemValue.replace(/"/g, '&quot;')}">
+                                <button type="button" class="remove-item-btn"><i class="ri-delete-bin-line"></i></button>
+                            </div>`;
+                        });
+                        
+                        editableHtml += `</div>
+                            <button type="button" class="add-item-btn" data-field="${key}">
+                                <i class="ri-add-line"></i> Add Item
+                            </button>
+                        </div>`;
+                    } else if (typeof value === 'object' && value !== null) {
+                        const jsonValue = JSON.stringify(value, null, 2);
+                        editableHtml += `<div class="form-group">
+                            <label>${key}:</label>
+                            <textarea class="form-control" data-field="${key}" rows="5">${jsonValue}</textarea>
+                        </div>`;
+                    } else {
+                        const displayValue = value !== null && value !== undefined ? value : '';
+                        editableHtml += `<div class="form-group">
+                            <label>${key}:</label>
+                            <input type="text" class="form-control" data-field="${key}" value="${String(displayValue).replace(/"/g, '&quot;')}">
+                        </div>`;
+                    }
+                }
+                
+                editableHtml += '</div>';
+                
+                // Replace the content with editable fields
+                $("#analysisContent").html(editableHtml);
+                
+                // Add event handlers for array items
+                setupArrayItemHandlers();
+            }
+            
+            // Function to setup add/remove buttons for array items
+            function setupArrayItemHandlers() {
+                // Add item to array
+                $(document).off('click', '.add-item-btn').on('click', '.add-item-btn', function() {
+                    const field = $(this).data('field');
+                    const arrayItems = $(this).prev('.array-items');
+                    const newIndex = arrayItems.find('.array-item').length;
+                    
+                    const newItem = `<div class="array-item">
+                        <input type="text" class="form-control" data-index="${newIndex}" value="">
+                        <button type="button" class="remove-item-btn"><i class="ri-delete-bin-line"></i></button>
+                    </div>`;
+                    
+                    arrayItems.append(newItem);
+                });
+                
+                // Remove item from array
+                $(document).off('click', '.remove-item-btn').on('click', '.remove-item-btn', function() {
+                    $(this).closest('.array-item').remove();
+                });
+            }
+            
+            // Save analysis changes
+            $("#saveAnalysisBtn").click(function() {
+                try {
+                    // Get the currently active tab and extract its content
+                    const activeTab = $(".analysis-tab.active").data("tab");
+                    
+                    // Prepare data to be sent
+                    const updateData = {};
+                    
+                    // For sales analysis tab, collect the edited data
+                    if (activeTab === "sales") {
+                        // Get values from form inputs
+                        const editedData = {};
+                        
+                        // Get values from simple inputs
+                        $('.single-input').each(function() {
+                            const field = $(this).data('field');
+                            editedData[field] = $(this).val();
+                        });
+                        
+                        // Get nested object values
+                        $('.nested-object').each(function() {
+                            const objectName = $(this).data('object');
+                            const nestedData = {};
+                            
+                            $(this).find('input').each(function() {
+                                const field = $(this).data('field');
+                                nestedData[field] = $(this).val();
+                            });
+                            
+                            editedData[objectName] = nestedData;
+                        });
+                        
+                        // Get array values
+                        $('.array-items').each(function() {
+                            const field = $(this).data('field');
+                            const items = [];
+                            
+                            $(this).find('input').each(function() {
+                                let itemValue = $(this).val();
+                                // Try to parse as JSON if it looks like JSON
+                                if (itemValue.trim().startsWith('{') || itemValue.trim().startsWith('[')) {
+                                    try {
+                                        itemValue = JSON.parse(itemValue);
+                                    } catch (e) {
+                                        // Keep as string if parsing failed
+                                    }
+                                }
+                                items.push(itemValue);
+                            });
+                            
+                            editedData[field] = items;
+                        });
+                        
+                        // Update global variable for sales data
+                        salesAnalysisData = editedData;
+                        
+                        // Add to update data
+                        updateData.sales_data = salesAnalysisData;
+                    }
+                    
+                    // Always include the call analysis data (not editable currently)
+                    if (callAnalysisData) {
+                        updateData.call_analysis = callAnalysisData;
+                    }
+                    
+                    // Format the data in a structured way instead of raw JSON if in sales tab
+                    if (activeTab === "sales") {
+                        const formattedJson = formatAnalysisResults(salesAnalysisData);
+                        $("#sales-analysis-content").html(formattedJson);
+                    }
+                    
+                    // Save to database
+                    const transcriptId = "{{ transcript.id }}";
+                    
+                    $.ajax({
+                        url: `/transcripts/${transcriptId}/update-analysis`,
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(updateData),
+                        success: function(data) {
+                            console.log("Analysis updated successfully");
+                            
+                            // Show success message
+                            const successMsg = $(`<div class="alert alert-success" style="padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin: 10px 0;">
+                                <i class="ri-check-line"></i> Analysis updated successfully
+                            </div>`);
+                            $("#analysisContent").before(successMsg);
+                            setTimeout(() => successMsg.fadeOut(500, function() { $(this).remove(); }), 3000);
+                            
+                            // Update data for both tabs if new data returned from server
+                            if (data.sales_data) {
+                                salesAnalysisData = data.sales_data;
+                                $("#sales-analysis-content").html(formatAnalysisResults(salesAnalysisData));
+                            }
+                            
+                            if (data.call_analysis) {
+                                callAnalysisData = data.call_analysis;
+                                $("#call-analysis-content").html(formatCallAnalysisResults(callAnalysisData));
+                            }
+                            
+                            // Show the continue button after saving
+                            $("#continueToEnrichmentBtn").show();
+                        },
+                        error: function(xhr) {
+                            console.error("Error updating analysis", xhr);
+                            alert("Error saving changes: " + 
+                                  (xhr.responseJSON ? xhr.responseJSON.detail : "Unknown error"));
+                        }
+                    });
+                    
+                    // Hide save button, show edit button
+                    $("#saveAnalysisBtn").hide();
+                    $("#editAnalysisBtn").show();
+                } catch (e) {
+                    console.error("Error saving changes:", e);
+                    alert("Error saving changes. Please try again.");
+                }
+            });
+            
+            // Analyze transcript
+            $("#analyzeBtn").click(function() {
+                const transcriptId = "{{ transcript.id }}";
+                if (!transcriptId) {
+                    alert("Transcript ID not found.");
+                    return;
+                }
+                
+                // Show loader and progress indicator
+                $("#analyzeBtn").prop("disabled", true);
+                $("#analysisLoader").show();
+                $("#analysisResults").hide();
+                $("#enrichmentResults").hide();
+                $("#dataEnrichmentSection").hide();
+                $("#pipelineProgress").show();
+                $("#pipelineInfo").text("Status: Running initial analysis...");
+                
+                // Update pipeline progress
+                $("#stepTranscription").addClass("completed");
+                $("#stepAnalysis").addClass("active");
+                
+                // Call analysis endpoint
+                $.ajax({
+                    url: `/transcripts/${transcriptId}/analyze`,
+                    type: "POST",
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log("Full data response:", data);
+                        console.log("Call analysis exists:", data.hasOwnProperty('call_analysis'));
+                        console.log("Call analysis type:", typeof data.call_analysis);
+                        console.log("Call analysis empty:", data.call_analysis && Object.keys(data.call_analysis).length === 0);
+                        
+                        // Update progress
+                        $("#stepAnalysis").removeClass("active").addClass("completed");
+                        $("#pipelineInfo").text("Status: Initial analysis complete.");
+                        
+                        // Hide loading
+                        $("#analysisLoader").hide();
+                        $("#analyzeBtn").prop("disabled", false);
+                        
+                        // Sempre mostrar os resultados
+                        $("#analysisResults").show();
+                        
+                        // Limpar o conteúdo existente
+                        $("#analysisContent").empty();
+                        
+                        // Criar uma div para cada tipo de análise (sem abas)
+                        let salesDiv = $("<div id='salesAnalysis'><h3>Análise de Vendas</h3></div>");
+                        let callDiv = $("<div id='callAnalysis' style='margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;'><h3>Análise de Chamada</h3></div>");
+                        
+                        // Processar dados de análise de vendas
+                        if (data && data.sales_data) {
+                            salesAnalysisData = data.sales_data;
+                            try {
+                                let salesHtml = formatAnalysisResults(salesAnalysisData);
+                                salesDiv.append(salesHtml);
+                            } catch (error) {
+                                salesDiv.append("<p>Erro ao formatar análise de vendas: " + error.message + "</p>");
+                            }
+                            
+                            // Mostrar botão de edição
+                            $("#editAnalysisBtn").show();
+                            
+                            // Mostrar seção de enriquecimento
+                            $("#dataEnrichmentSection").show();
+                        } else {
+                            salesDiv.append("<p>Não há dados de análise de vendas disponíveis.</p>");
+                        }
+                        
+                        // Processar dados de análise de chamada
+                        if (data && data.call_analysis) {
+                            console.log("Call analysis data found:", data.call_analysis);
+                            console.log("Call analysis keys:", Object.keys(data.call_analysis));
+                            
+                            // Armazenar dados de análise de chamada
+                            callAnalysisData = data.call_analysis;
+                            
+                            try {
+                                // Formatar os dados de análise de chamada
+                                let callHtml = formatCallAnalysisResults(callAnalysisData);
+                                callDiv.append(callHtml);
+                            } catch (error) {
+                                console.error("Error formatting call analysis:", error);
+                                callDiv.append("<p>Erro ao formatar análise de chamada: " + error.message + "</p>");
+                                callDiv.append("<pre style='background: #f5f5f5; padding: 10px; overflow: auto;'>" + JSON.stringify(callAnalysisData, null, 2) + "</pre>");
+                            }
+                        } else {
+                            callDiv.append("<p>Não há dados de análise de chamada disponíveis.</p>");
+                        }
+                        
+                        // Adicionar ambas as divs ao conteúdo
+                        $("#analysisContent").append(salesDiv);
+                        $("#analysisContent").append(callDiv);
+                    },
+                    error: function(xhr) {
+                        // Reset progress
+                        $("#stepAnalysis").removeClass("active");
+                        $("#stepTranscription").removeClass("completed");
+                        $("#pipelineProgress").hide();
+                        
+                        // Hide loader
+                        $("#analysisLoader").hide();
+                        $("#analyzeBtn").prop("disabled", false);
+                        
+                        // Show error in a more user-friendly way
+                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "Unknown error";
+                        console.error("Analysis error:", errorMsg);
+                        
+                        // Display error on the page instead of using an alert
+                        $("#analysisResults").show();
+                        $("#analysisContent").html(`
+                            <div style="padding: 15px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 20px;">
+                                <h4 style="margin-top: 0;"><i class="ri-error-warning-line"></i> Analysis Failed</h4>
+                                <p>${errorMsg}</p>
+                                <p>Try the following:</p>
+                                <ul>
+                                    <li>Check if your transcript has enough content for analysis (at least a few paragraphs)</li>
+                                    <li>Make sure the text doesn't contain special characters that might cause issues</li>
+                                    <li>Try breaking the text into smaller sections</li>
+                                </ul>
+                            </div>
+                        `);
+                    }
+                });
+            });
+            
+            // Add and remove LinkedIn profiles
+            $("#addProfileBtn").click(function() {
+                const profileItem = `
+                    <div class="linkedin-profile-item">
+                        <input type="url" name="linkedin_profiles[]" class="form-control linkedin-profile-url" placeholder="https://www.linkedin.com/in/key-person" required>
+                        <button type="button" class="remove-profile-btn"><i class="ri-close-line"></i></button>
+                    </div>
+                `;
+                $("#linkedinProfilesContainer").append(profileItem);
+            });
+            
+            // Delegate event handler for removing profiles
+            $("#linkedinProfilesContainer").on("click", ".remove-profile-btn", function() {
+                // Don't remove if it's the last profile
+                if ($(".linkedin-profile-item").length > 1) {
+                    $(this).closest(".linkedin-profile-item").remove();
+                } else {
+                    // If it's the last one, just clear the input
+                    $(this).closest(".linkedin-profile-item").find("input").val("");
+                }
+            });
+            
+            // Enrichment form submission
+            $("#enrichmentForm").submit(function(e) {
+                e.preventDefault();
+                
+                const transcriptId = "{{ transcript.id }}";
+                if (!transcriptId) {
+                    alert("Transcript ID not found.");
+                    return;
+                }
+                
+                // Collect form data
+                const companyWebsite = $("#companyWebsite").val();
+                const linkedinUrls = [];
+                
+                $(".linkedin-profile-url").each(function() {
+                    const url = $(this).val().trim();
+                    if (url) linkedinUrls.push(url);
+                });
+                
+                // Basic input validation
+                if (!companyWebsite && linkedinUrls.length === 0) {
+                    alert("Please provide at least the company website or a LinkedIn profile.");
+                    return;
+                }
+                
+                // Prepare data for submission
+                const enrichmentData = {
+                    transcript_id: transcriptId,
+                    company_website: companyWebsite,
+                    linkedin_profiles: linkedinUrls
+                };
+                
+                // Show loader and progress indicator
+                $("#submitEnrichmentBtn").prop("disabled", true);
+                $("#enrichmentLoader").show();
+                $("#enrichmentResults").hide();
+                $("#pipelineInfo").text("Status: Enriching data with website and LinkedIn information using BrightData...");
+                
+                // Update pipeline progress
+                $("#stepWebsite").addClass("active");
+                
+                // Start the enrichment pipeline
+                $.ajax({
+                    url: "/enrich-data/",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(enrichmentData),
+                    success: function(data) {
+                        // Update progress sequentially
+                        $("#stepWebsite").removeClass("active").addClass("completed");
+                        setTimeout(() => {
+                            $("#stepLinkedIn").addClass("active");
+                            setTimeout(() => {
+                                $("#stepLinkedIn").removeClass("active").addClass("completed");
+                                $("#stepReport").addClass("active");
+                                setTimeout(() => {
+                                    $("#stepReport").removeClass("active").addClass("completed");
+                                    $("#pipelineInfo").text("Status: All steps completed successfully.");
+                                }, 300);
+                            }, 300);
+                        }, 300);
+                        
+                        // Hide loader
+                        $("#enrichmentLoader").hide();
+                        $("#submitEnrichmentBtn").prop("disabled", false);
+                        
+                        // Generate scraping status summary
+                        let scrapingStatus = "";
+                        if (data && data.scraping_status) {
+                            scrapingStatus = `
+                                <div class="enrichment-summary">
+                                    <h5>Scraping Results:</h5>
+                                    <div class="two-columns">
+                                        <div class="column">
+                                            <h5>Website Scraping:</h5>
+                                            <p>${data.scraping_status.website ? "Successfully scraped website data" : "No website data scraped"}</p>
+                                        </div>
+                                        <div class="column">
+                                            <h5>LinkedIn Scraping (BrightData):</h5>
+                                            <p>${data.scraping_status.linkedin ? "Successfully scraped LinkedIn profiles" : "No LinkedIn data scraped"}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Create tab structure for the enrichment results
+                        let tabsHtml = `
+                            <div class="analysis-tabs">
+                                <div class="analysis-tab active" data-tab="sales-enrichment">Análise de Vendas</div>
+                                <div class="analysis-tab" data-tab="call-enrichment">Análise de Chamada</div>
+                                <div class="analysis-tab" data-tab="full-report">Relatório Completo</div>
+                            </div>
+                        `;
+                        
+                        // Create content containers for tabs
+                        let tabContentHtml = `
+                            <div class="tab-content active" id="sales-enrichment-content"></div>
+                            <div class="tab-content" id="call-enrichment-content"></div>
+                            <div class="tab-content" id="full-report-content"></div>
+                        `;
+                        
+                        // Show results
+                        if (data && data.report) {
+                            // Clean any remaining markdown code markers from the report
+                            let cleanReport = data.report.replace(/```html/g, "").replace(/```/g, "").trim();
+                            
+                            // Add the call analysis data at the beginning of the report
+                            let callAnalysisHtml = "";
+                            if (callAnalysisData) {
+                                callAnalysisHtml = formatCallAnalysisResults(callAnalysisData);
+                            }
+                            
+                            // Fill the enrichment content with the tab structure
+                            $("#enrichmentContent").html(`
+                                ${scrapingStatus}
+                                ${tabsHtml}
+                                ${tabContentHtml}
+                            `);
+                            
+                            // Populate the tab contents
+                            $("#call-enrichment-content").html(callAnalysisHtml);
+                            $("#sales-enrichment-content").html(cleanReport);
+                            $("#full-report-content").html(`
+                                <div class="full-report">
+                                    <h3>Análise Completa da Reunião</h3>
+                                    <div class="report-section">
+                                        <h4>Análise de Chamada</h4>
+                                        ${callAnalysisHtml}
+                                    </div>
+                                    <div class="report-section">
+                                        <h4>Análise de Vendas Enriquecida</h4>
+                                        ${cleanReport}
+                                    </div>
+                                </div>
+                            `);
+                            
+                            // Set up tab click handlers for the enrichment results
+                            $("#enrichmentContent .analysis-tab").click(function() {
+                                // Remove active class from all tabs and content
+                                $("#enrichmentContent .analysis-tab").removeClass("active");
+                                $("#enrichmentContent .tab-content").removeClass("active");
+                                
+                                // Add active class to clicked tab and corresponding content
+                                $(this).addClass("active");
+                                const tabId = $(this).data("tab");
+                                $("#" + tabId + "-content").addClass("active");
+                            });
+                        } else {
+                            $("#enrichmentContent").html(`
+                                ${scrapingStatus}
+                                <p>Could not generate a complete report.</p>
+                            `);
+                        }
+                        
+                        $("#enrichmentResults").show();
+                        // Scroll to results
+                        $("#enrichmentResults")[0].scrollIntoView({ behavior: 'smooth' });
+                    },
+                    error: function(xhr) {
+                        // Reset progress indicators
+                        $("#stepWebsite").removeClass("active");
+                        $("#stepLinkedIn").removeClass("active");
+                        $("#stepReport").removeClass("active");
+                        $("#pipelineInfo").text("Status: Error during data enrichment.");
+                        
+                        // Hide loader
+                        $("#enrichmentLoader").hide();
+                        $("#submitEnrichmentBtn").prop("disabled", false);
+                        
+                        // Show error
+                        alert("Data enrichment failed: " +
+                             (xhr.responseJSON ? xhr.responseJSON.detail : "Unknown error"));
+                    }
+                });
+            });
+
+            // Function to format analysis results in a structured readable way
+            function formatAnalysisResults(data) {
+                let html = '<div class="structured-analysis">';
+                
+                // Company and Stakeholders section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Empresa e Stakeholders</h4>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <strong>Empresa:</strong> 
+                                <span>${data.empresa || 'Não identificada'}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <strong>Stakeholders:</strong> 
+                                <span>${Array.isArray(data.stakeholders) ? data.stakeholders.join(', ') : 'Não identificados'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // SPIN Analysis section
+                if (data.spin) {
+                    html += `
+                        <div class="analysis-section">
+                            <h4>Análise SPIN</h4>
+                            <div class="spin-analysis">
+                                <div class="spin-item">
+                                    <h5>Situação:</h5>
+                                    <p>${data.spin.situacao || 'Não identificada'}</p>
+                                </div>
+                                <div class="spin-item">
+                                    <h5>Problema:</h5>
+                                    <p>${data.spin.problema || 'Não identificado'}</p>
+                                </div>
+                                <div class="spin-item">
+                                    <h5>Implicação:</h5>
+                                    <p>${data.spin.implicacao || 'Não identificada'}</p>
+                                </div>
+                                <div class="spin-item">
+                                    <h5>Necessidade:</h5>
+                                    <p>${data.spin.necessidade || 'Não identificada'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // BANT Analysis section
+                if (data.bant) {
+                    html += `
+                        <div class="analysis-section">
+                            <h4>Análise BANT</h4>
+                            <div class="bant-analysis">
+                                <div class="bant-item">
+                                    <h5>Budget (Orçamento):</h5>
+                                    <p>${data.bant.budget || 'Não identificado'}</p>
+                                </div>
+                                <div class="bant-item">
+                                    <h5>Authority (Autoridade):</h5>
+                                    <p>${data.bant.authority || 'Não identificada'}</p>
+                                </div>
+                                <div class="bant-item">
+                                    <h5>Need (Necessidade):</h5>
+                                    <p>${data.bant.need || 'Não identificada'}</p>
+                                </div>
+                                <div class="bant-item">
+                                    <h5>Timeline (Cronograma):</h5>
+                                    <p>${data.bant.timeline || 'Não identificado'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Dores e Oportunidades section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Dores e Oportunidades</h4>
+                        <div class="two-columns">
+                            <div class="column">
+                                <h5>Dores Identificadas:</h5>
+                                <ul>
+                                    ${Array.isArray(data.dores) && data.dores.length > 0 
+                                        ? data.dores.map(item => `<li>${item}</li>`).join('') 
+                                        : '<li>Nenhuma dor específica identificada</li>'}
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <h5>Oportunidades:</h5>
+                                <ul>
+                                    ${Array.isArray(data.oportunidades) && data.oportunidades.length > 0 
+                                        ? data.oportunidades.map(item => `<li>${item}</li>`).join('') 
+                                        : '<li>Nenhuma oportunidade específica identificada</li>'}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Soluções section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Soluções</h4>
+                        <ul>
+                            ${Array.isArray(data.solucoes) && data.solucoes.length > 0 
+                                ? data.solucoes.map(item => `<li>${item}</li>`).join('') 
+                                : '<li>Nenhuma solução específica identificada</li>'}
+                        </ul>
+                    </div>
+                `;
+                
+                // Tópicos de Pesquisa section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Tópicos de Pesquisa</h4>
+                        <ul>
+                            ${Array.isArray(data.gatilhos_pesquisa) && data.gatilhos_pesquisa.length > 0 
+                                ? data.gatilhos_pesquisa.map(item => `<li>${item}</li>`).join('') 
+                                : '<li>Nenhum tópico de pesquisa identificado</li>'}
+                        </ul>
+                    </div>
+                `;
+                
+                // Marcas Mencionadas section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Marcas Mencionadas</h4>
+                        <ul>
+                            ${Array.isArray(data.marcas) && data.marcas.length > 0 
+                                ? data.marcas.map(item => `<li>${item}</li>`).join('') 
+                                : '<li>Nenhuma marca específica identificada</li>'}
+                        </ul>
+                    </div>
+                `;
+                
+                // Additional Context section
+                html += `
+                    <div class="analysis-section">
+                        <h4>Contexto de Personalização</h4>
+                        <p>${data.contexto_personalizacao || 'Não identificado'}</p>
+                    </div>
+                `;
+                
+                html += '</div>';
+                return html;
+            }
+
+            // Function to format call analysis results
+            function formatCallAnalysisResults(data) {
+                console.log("Formatting call analysis data:", data);
+                
+                if (!data) {
+                    console.log("No call analysis data to format");
+                    return '<p>Não há dados de análise de chamada disponíveis.</p>';
+                }
+                
+                try {
+                    // Versão ultra simplificada para garantir que a renderização funcione
+                    let html = '<div class="call-analysis-dashboard">';
+                    html += '<h3>Dashboard de Análise de Chamada</h3>';
+                    
+                    // Informações básicas
+                    html += '<div class="info-card" style="background: #f5f8ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+                    html += '<h4>Informações da Reunião</h4>';
+                    html += '<p><strong>Data:</strong> ' + (data.date || 'N/A') + '</p>';
+                    html += '<p><strong>Duração:</strong> ' + (data.duration || 'N/A') + '</p>';
+                    html += '<p><strong>Participantes:</strong> ' + (data.participants ? data.participants.join(', ') : 'N/A') + '</p>';
+                    html += '</div>';
+                    
+                    // Métricas
+                    html += '<div class="metrics-card" style="background: #f5fff8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+                    html += '<h4>Métricas</h4>';
+                    
+                    // Talk ratio
+                    if (data.talkRatio && Object.keys(data.talkRatio).length > 0) {
+                        html += '<h5>Distribuição de Fala</h5>';
+                        html += '<ul>';
+                        for (const [person, percentage] of Object.entries(data.talkRatio)) {
+                            html += '<li>' + person + ': ' + percentage + '%</li>';
+                        }
+                        html += '</ul>';
+                    }
+                    
+                    // Perguntas
+                    if (data.questions && data.questions.length > 0) {
+                        html += '<h5>Perguntas: ' + data.questions.length + '</h5>';
+                    }
+                    
+                    html += '</div>';
+                    
+                    // Próximos Passos
+                    if (data.nextSteps && data.nextSteps.length > 0) {
+                        html += '<div class="steps-card" style="background: #fff5f8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+                        html += '<h4>Próximos Passos</h4>';
+                        html += '<ul>';
+                        for (const step of data.nextSteps) {
+                            html += '<li><strong>' + step.description + '</strong> (Responsável: ' + step.owner + ')</li>';
+                        }
+                        html += '</ul>';
+                        html += '</div>';
+                    }
+                    
+                    html += '</div>';
+                    return html;
+                } catch (error) {
+                    console.error("Error formatting call analysis:", error);
+                    return '<p>Erro ao formatar análise de chamada: ' + error.message + '</p>' +
+                           '<pre style="background: #f5f5f5; padding: 10px; overflow: auto; max-height: 200px;">' + 
+                           JSON.stringify(data, null, 2) + '</pre>';
+                }
+            }
+            
+            // Helper function to generate consistent colors based on a string
+            function getRandomColor(str) {
+                // List of predefined colors for better visual appeal
+                const colors = [
+                    '#3498db', '#2ecc71', '#e74c3c', '#f39c12', 
+                    '#9b59b6', '#1abc9c', '#d35400', '#c0392b'
+                ];
+                
+                // Simple hash function to get a consistent index
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                
+                return colors[Math.abs(hash) % colors.length];
+            }
+
+            // Direct text analysis
+            $("#analyzeDirectBtn").click(function() {
+                const transcriptText = $("#transcriptText").text();
+                
+                if (!transcriptText || transcriptText.trim().length < 10) {
+                    alert("The transcript text is too short or empty. Please provide more content to analyze.");
+                    return;
+                }
+                
+                // Show loader and progress indicator
+                $("#analyzeDirectBtn").prop("disabled", true);
+                $("#analyzeBtn").prop("disabled", true);
+                $("#analysisLoader").show();
+                $("#analysisResults").hide();
+                $("#enrichmentResults").hide();
+                $("#dataEnrichmentSection").hide();
+                $("#pipelineProgress").show();
+                $("#pipelineInfo").text("Status: Running direct text analysis...");
+                
+                // Update pipeline progress
+                $("#stepTranscription").addClass("completed");
+                $("#stepAnalysis").addClass("active");
+                
+                // Call direct analysis endpoint
+                $.ajax({
+                    url: `/analyze-text`,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ text: transcriptText }),
+                    success: function(data) {
+                        console.log("Direct analysis response:", data);
+                        
+                        // Update progress
+                        $("#stepAnalysis").removeClass("active").addClass("completed");
+                        $("#pipelineInfo").text("Status: Initial analysis complete.");
+                        
+                        // Hide loading
+                        $("#analysisLoader").hide();
+                        $("#analyzeDirectBtn").prop("disabled", false);
+                        $("#analyzeBtn").prop("disabled", false);
+                        
+                        // Sempre mostrar os resultados
+                        $("#analysisResults").show();
+                        
+                        // Limpar o conteúdo existente
+                        $("#analysisContent").empty();
+                        
+                        // Criar uma div para cada tipo de análise (sem abas)
+                        let salesDiv = $("<div id='salesAnalysis'><h3>Análise de Vendas</h3></div>");
+                        let callDiv = $("<div id='callAnalysis' style='margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;'><h3>Análise de Chamada</h3></div>");
+                        
+                        // Processar dados de análise de vendas
+                        if (data && data.sales_data) {
+                            salesAnalysisData = data.sales_data;
+                            try {
+                                let salesHtml = formatAnalysisResults(salesAnalysisData);
+                                salesDiv.append(salesHtml);
+                            } catch (error) {
+                                salesDiv.append("<p>Erro ao formatar análise de vendas: " + error.message + "</p>");
+                            }
+                            
+                            // Mostrar botão de edição
+                            $("#editAnalysisBtn").show();
+                            
+                            // Mostrar seção de enriquecimento
+                            $("#dataEnrichmentSection").show();
+                        } else {
+                            salesDiv.append("<p>Não há dados de análise de vendas disponíveis.</p>");
+                        }
+                        
+                        // Processar dados de análise de chamada
+                        if (data && data.call_analysis) {
+                            console.log("Call analysis data found:", data.call_analysis);
+                            
+                            // Armazenar dados de análise de chamada
+                            callAnalysisData = data.call_analysis;
+                            
+                            try {
+                                // Formatar os dados de análise de chamada
+                                let callHtml = formatCallAnalysisResults(callAnalysisData);
+                                callDiv.append(callHtml);
+                            } catch (error) {
+                                console.error("Error formatting call analysis:", error);
+                                callDiv.append("<p>Erro ao formatar análise de chamada: " + error.message + "</p>");
+                                callDiv.append("<pre style='background: #f5f5f5; padding: 10px; overflow: auto;'>" + JSON.stringify(callAnalysisData, null, 2) + "</pre>");
+                            }
+                        } else {
+                            callDiv.append("<p>Não há dados de análise de chamada disponíveis.</p>");
+                        }
+                        
+                        // Adicionar ambas as divs ao conteúdo
+                        $("#analysisContent").append(salesDiv);
+                        $("#analysisContent").append(callDiv);
+                    },
+                    error: function(xhr) {
+                        // Reset progress
+                        $("#stepAnalysis").removeClass("active");
+                        $("#stepTranscription").removeClass("completed");
+                        $("#pipelineProgress").hide();
+                        
+                        // Hide loader
+                        $("#analysisLoader").hide();
+                        $("#analyzeDirectBtn").prop("disabled", false);
+                        $("#analyzeBtn").prop("disabled", false);
+                        
+                        // Show error in a more user-friendly way
+                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.detail : "Unknown error";
+                        console.error("Direct analysis error:", errorMsg);
+                        
+                        // Display error on the page instead of using an alert
+                        $("#analysisResults").show();
+                        $("#analysisContent").html(`
+                            <div style="padding: 15px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 20px;">
+                                <h4 style="margin-top: 0;"><i class="ri-error-warning-line"></i> Direct Analysis Failed</h4>
+                                <p>${errorMsg}</p>
+                                <p>Try the following:</p>
+                                <ul>
+                                    <li>Check if your text has enough content for analysis (at least a few paragraphs)</li>
+                                    <li>Make sure the text doesn't contain special characters that might cause issues</li>
+                                    <li>Try breaking the text into smaller sections</li>
+                                </ul>
+                            </div>
+                        `);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
