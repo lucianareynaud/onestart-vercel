@@ -1,20 +1,17 @@
 {
-  "buildCommand": "pip install -r requirements.txt",
   "builds": [
     {
-      "src": "api/main.py", 
-      "use": "@vercel/python"
+      "src": "api/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/main.py"
+      "dest": "/api/main.py"
     }
-  ],
-  "functions": {
-    "api/main.py": {
-      "maxDuration": 300
-    }
-  }
+  ]
 } 
